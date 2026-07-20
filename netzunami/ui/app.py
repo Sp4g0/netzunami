@@ -66,6 +66,9 @@ class NetzunamiApp:
         tools_menu.add_command(label="Analizza config...", command=self._analyze_config)
         tools_menu.add_command(label="Esegui comando bulk...", command=self._bulk_command)
         tools_menu.add_separator()
+        tools_menu.add_command(label="Backup massivo...", command=self._bulk_backup)
+        tools_menu.add_command(label="Push template massivo...", command=self._bulk_push)
+        tools_menu.add_separator()
         tools_menu.add_command(label="Avvia listener sessioni", command=self._start_listener)
         menubar.add_cascade(label="Tools", menu=tools_menu)
 
@@ -482,6 +485,116 @@ class NetzunamiApp:
 
         tk.Button(dialog, text="Esegui", bg="#2d5a27", fg="white",
                  relief=tk.FLAT, padx=20, command=run).pack(pady=6)
+
+    def _bulk_backup(self):
+        import tkinter.filedialog as fd
+        from ..bulk import read_hosts, backup as bulk_backup
+
+        hosts_file = fd.askopenfilename(title="File con lista host",
+                                        filetypes=[("Text", "*.txt"), ("All", "*.*")],
+                                        parent=self.root)
+        if not hosts_file:
+            return
+
+        output_dir = fd.askdirectory(title="Cartella per backup", parent=self.root)
+        if not output_dir:
+            output_dir = str(Path.home() / ".netzunami" / "backups")
+
+        hosts = read_hosts(hosts_file)
+        if not hosts:
+            messagebox.showerror("Errore", "Nessun host nel file")
+            return
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Backup {len(hosts)} apparati")
+        dialog.geometry("600x400")
+        dialog.configure(bg="#1a1a1a")
+        dialog.transient(self.root)
+
+        output = tk.Text(dialog, bg="#0a0a0a", fg="#d3d7cf", font=MONO_FONT,
+                        relief=tk.FLAT, borderwidth=0)
+        output.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        output.insert(tk.END, f"Backup di {len(hosts)} apparati...\n")
+        self.root.update()
+
+        def run():
+            results = bulk_backup(hosts, output_dir, max_workers=5)
+            ok = sum(1 for r in results if r["status"] == "ok")
+            err = sum(1 for r in results if r["status"] == "error")
+            for r in results:
+                if r["status"] == "ok":
+                    output.insert(tk.END, f"✓ {r['host']} → {Path(r['file']).name}\n")
+                else:
+                    output.insert(tk.END, f"✗ {r['host']}: {r['error']}\n")
+                self.root.update()
+            output.insert(tk.END, f"\nFatto: {ok} OK, {err} errori\n")
+            self._update_status(f"Backup: {ok}/{len(hosts)}")
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _bulk_push(self):
+        import tkinter.filedialog as fd
+        from ..bulk import read_hosts, bulk_apply, render_template
+
+        hosts_file = fd.askopenfilename(title="File con lista host",
+                                        filetypes=[("Text", "*.txt"), ("All", "*.*")],
+                                        parent=self.root)
+        if not hosts_file:
+            return
+
+        template_file = fd.askopenfilename(title="Template comandi",
+                                           filetypes=[("Text", "*.txt"), ("All", "*.*")],
+                                           parent=self.root)
+        if not template_file:
+            return
+
+        with open(template_file) as f:
+            template = f.read()
+
+        hosts = read_hosts(hosts_file)
+        if not hosts:
+            messagebox.showerror("Errore", "Nessun host nel file")
+            return
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title(f"Push su {len(hosts)} apparati")
+        dialog.geometry("600x450")
+        dialog.configure(bg="#1a1a1a")
+        dialog.transient(self.root)
+
+        tk.Label(dialog, text="Anteprima template:", bg="#1a1a1a", fg="#d3d7cf",
+                anchor="w").pack(fill=tk.X, padx=10, pady=4)
+
+        preview = tk.Text(dialog, bg="#2a2a2a", fg="#d3d7cf", font=MONO_FONT,
+                         height=6, relief=tk.FLAT, borderwidth=0)
+        preview.pack(fill=tk.X, padx=10, pady=2)
+        preview.insert(tk.END, template[:500])
+        preview.config(state=tk.DISABLED)
+
+        output = tk.Text(dialog, bg="#0a0a0a", fg="#d3d7cf", font=MONO_FONT,
+                        relief=tk.FLAT, borderwidth=0)
+        output.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        def run():
+            if not messagebox.askyesno("Conferma", f"Pushare su {len(hosts)} apparati?"):
+                return
+            passwords = {s["host"]: (self.vault.get(s["host"], s["user"]) or "")
+                        for s in hosts}
+            results = bulk_apply(hosts, template, passwords=passwords, confirm=False)
+            ok = sum(1 for r in results if r["status"] == "ok")
+            for r in results:
+                if r["status"] == "ok":
+                    output.insert(tk.END, f"✓ {r['host']}\n")
+                elif r["status"] == "error":
+                    output.insert(tk.END, f"✗ {r['host']}: {r.get('error', '')}\n")
+                self.root.update()
+            output.insert(tk.END, f"\nFatto: {ok} OK, {len(results)-ok} falliti\n")
+
+        btn_frame = tk.Frame(dialog, bg="#1a1a1a")
+        btn_frame.pack(fill=tk.X, padx=10, pady=6)
+        tk.Button(btn_frame, text="Esegui Push", bg="#2d5a27", fg="white",
+                 relief=tk.FLAT, padx=20, command=lambda: threading.Thread(target=run, daemon=True).start()
+                 ).pack(side=tk.LEFT, padx=4)
 
     def _start_listener(self):
         import tkinter.filedialog as fd

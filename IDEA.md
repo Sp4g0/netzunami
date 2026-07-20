@@ -8,39 +8,49 @@ Terminale SSH intelligente (tipo PuTTY/SecureCRT) che analizza configurazioni di
 
 **Per chi è:**
 - **Junior**: impara dalle best practice, capisce cosa controllare, evita errori comuni
-- **Senior**: velocizza i check di routine, bulk su N apparati, non perde dettagli
+- **Senior**: velocizza check, bulk change, non perde dettagli su decine di apparati
 
-## Installazione
+## Workflow Change Massivi
 
-```bash
-pip install -e .            # base (leggero, sklearn)
-pip install -e ".[ai]"      # + AI embedding (sentence-transformers, FAISS, PyMuPDF)
-python -m netzunami.gui     # Avvia GUI
+```
+1. hosts.txt                   2. Da chat (AI)                   3. Push
+┌──────────────┐              ┌──────────────┐                  ┌──────────┐
+│ 10.0.0.1     │              │ interface    │                  │ Apparato │
+│ 10.0.0.2     │     template │ {{port}}     │   netzunami      │    1 ✓   │
+│ sw-01        │  ───────►    │  switchport  │  ──────────►     │    2 ✓   │
+│ sw-02        │              │  mode access │                  │    3 ✓   │
+└──────────────┘              │  ...         │                  └──────────┘
+                              └──────────────┘
 ```
 
-**Base** (scikit-learn Tfidf): ~50MB, embedding testuali, nessuna GPU
-**AI** (+torch): ~2GB, embedding semantici, indicizzazione PDF
+## CLI
+
+```bash
+# Backup massivo
+netzunami bulk backup hosts.txt -o ~/backup/
+
+# Push template con variabili
+netzunami bulk push hosts.txt template.txt --var port=Gi0/1 --var vlan=100
+
+# Salta conferma (-y)
+netzunami bulk push hosts.txt template.txt -y
+
+# Analisi offline
+netzunami analyze show_run.cfg
+
+# Connessione SSH + analisi live
+netzunami ssh 10.0.0.1 -u admin
+
+# GUI
+python -m netzunami.gui
+```
 
 ## GUI (Tkinter)
 
 - Terminale colorato stile PuTTY/SecureCRT
-- Pannello sessioni a sinistra (salvate in ~/.netzunami/sessions.json)
-- Pannello NetSense AI a destra (findings in tempo reale)
-- Vault password crittografato (Fernet)
-- Import sessioni da SecureCRT (.ini)
-- Comando bulk su N apparati
-- Shortcut: Ctrl+N nuova, Ctrl+Q quick connect, Ctrl+T tab, Ctrl+W chiudi
-
-## Per Junior e Senior
-
-- **Junior**: impara dalle best practice embedded, capisce cosa controllare, non sbaglia configurazioni di base
-- **Senior**: velocizza audit, bulk change, non perde dettagli su decine di apparati
-- **Futuro**: change massivi con revisione AI (diff strutturato, rollback pianificato)
-
-## Prossimo
-
-1. SSH hop multiplo (catena bastion)
-2. Parser multi-vendor (Huawei VRP, Juniper JunOS)
-3. Dataset sessioni → training incrementale feedback loop
-4. Change massivi con revisione AI (diff strutturato, rollback)
-5. TUI curses per split terminale (SSH + chat laterale)
+- Pannello sessioni a sinistra
+- Pannello NetSense AI a destra (findings live)
+- Vault password crittografato
+- Import sessioni CRT
+- Backup massivo / Push template
+- Shortcut: Ctrl+N, Ctrl+Q, Ctrl+T, Ctrl+W

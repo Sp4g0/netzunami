@@ -19,6 +19,7 @@ from .indexer import index_manuals, search
 from .analyzer import analyze_with_rules, analyze_with_knowledge
 from .listener import listen_session
 from .models import Finding, Severity
+from .bulk import read_hosts, backup as bulk_backup, bulk_apply, render_template
 
 console = Console()
 cfg = Config.load()
@@ -188,6 +189,65 @@ def listen(log_file, vendor):
         listen_session(log_file, vendor=vendor)
     except KeyboardInterrupt:
         console.print("\n[yellow]Listener fermato.[/yellow]")
+
+
+@cli.group()
+def bulk():
+    """Operazioni massive su N apparati"""
+
+
+@bulk.command()
+@click.argument("hosts_file", type=click.Path(exists=True))
+@click.option("-o", "--output", default=None, help="Cartella output backup")
+@click.option("-w", "--workers", default=5, help="Thread paralleli")
+def backup(hosts_file, output, workers):
+    """Backup config da lista host"""
+    hosts = read_hosts(hosts_file)
+    console.print(f"[bold cyan]Backup {len(hosts)} apparati[/bold cyan]")
+    results = bulk_backup(hosts, output, max_workers=workers)
+    ok = sum(1 for r in results if r["status"] == "ok")
+    err = sum(1 for r in results if r["status"] == "error")
+    console.print(f"[green]OK: {ok}[/green]  [red]Errori: {err}[/red]")
+    for r in results:
+        if r["status"] == "ok":
+            console.print(f"  [green]✓[/green] {r['host']} → {r['file']}")
+        else:
+            console.print(f"  [red]✗[/red] {r['host']}: {r['error']}")
+
+
+@bulk.command()
+@click.argument("hosts_file", type=click.Path(exists=True))
+@click.argument("template_file", type=click.Path(exists=True))
+@click.option("-y", "--yes", is_flag=True, help="Salta conferma")
+@click.option("-w", "--workers", default=5, help="Thread paralleli")
+@click.option("--var", "vars", multiple=True, help="Variabili key=value")
+def push(hosts_file, template_file, yes, workers, vars):
+    """Push comandi da template su N apparati"""
+    with open(template_file) as f:
+        template = f.read()
+
+    variables = {}
+    for v in vars:
+        if "=" in v:
+            k, val = v.split("=", 1)
+            variables[k.strip()] = val.strip()
+
+    if variables:
+        template = render_template(template, variables)
+        console.print(f"[dim]Variabili: {variables}[/dim]")
+
+    hosts = read_hosts(hosts_file)
+    console.print(f"[bold cyan]Push su {len(hosts)} apparati[/bold cyan]")
+
+    results = bulk_apply(hosts, template, confirm=not yes, max_workers=workers)
+    ok = sum(1 for r in results if r["status"] == "ok")
+    err = sum(1 for r in results if r["status"] == "error" or r["status"] == "cancelled")
+    console.print(f"[green]OK: {ok}[/green]  [red]Falliti/Cancellati: {err}[/red]")
+    for r in results:
+        if r["status"] == "ok":
+            console.print(f"  [green]✓[/green] {r['host']}")
+        elif r["status"] == "error":
+            console.print(f"  [red]✗[/red] {r['host']}: {r.get('error', '')}")
 
 
 @cli.command()
