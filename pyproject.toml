@@ -6,11 +6,17 @@ requires-python = ">=3.10"
 dependencies = [
     "click>=8.0",
     "paramiko>=3.0",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+    "cryptography>=41.0",
+    "scikit-learn>=1.3",
+]
+
+[project.optional-dependencies]
+ai = [
     "sentence-transformers>=2.2",
     "faiss-cpu>=1.7",
     "PyMuPDF>=1.23",
-    "pyyaml>=6.0",
-    "rich>=13.0",
 ]
 
 [project.scripts]

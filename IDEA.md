@@ -4,60 +4,43 @@
 
 ## Concept
 
-CLI Python che si connette via SSH a apparati di rete, legge la running-config e la analizza con:
-- **Regole deterministiche**: pattern matching su misconfigurazioni note (Cisco IOS)
-- **Embedding AI**: manuali tecnici (PDF) indicizzati → ricerca semantica su configurazioni reali
-- **Chat laterale**: listener che osserva una sessione live e suggerisce findings in tempo reale
-- **Bastion/Jump host**: ProxyJump nativo per ambienti con hop
+Terminale SSH intelligente (tipo PuTTY/SecureCRT) che analizza configurazioni di rete in tempo reale.
+
+**Per chi è:**
+- **Junior**: impara dalle best practice, capisce cosa controllare, evita errori comuni
+- **Senior**: velocizza i check di routine, bulk su N apparati, non perde dettagli
 
 ## Installazione
 
 ```bash
-pip install -e .
+pip install -e .            # base (leggero, sklearn)
+pip install -e ".[ai]"      # + AI embedding (sentence-transformers, FAISS, PyMuPDF)
+python -m netzunami.gui     # Avvia GUI
 ```
 
-Dipende da: `sentence-transformers`, `faiss-cpu`, `paramiko`, `PyMuPDF`, `click`, `rich`.
+**Base** (scikit-learn Tfidf): ~50MB, embedding testuali, nessuna GPU
+**AI** (+torch): ~2GB, embedding semantici, indicizzazione PDF
 
-## Comandi
+## GUI (Tkinter)
 
-| Comando | Cosa fa |
-|---------|---------|
-| `netzunami ssh <host>` | Connessione SSH + dump config + analisi |
-| `netzunami analyze <file>` | Analisi file config offline |
-| `netzunami index <dir>` | Indicizza manuali PDF/TXT in knowledge base |
-| `netzunami search "query"` | Cerca nella knowledge base |
-| `netzunami listen <log>` | Ascolta sessione live in tempo reale |
-| `netzunami info` | Stato: modello, vettori, config |
+- Terminale colorato stile PuTTY/SecureCRT
+- Pannello sessioni a sinistra (salvate in ~/.netzunami/sessions.json)
+- Pannello NetSense AI a destra (findings in tempo reale)
+- Vault password crittografato (Fernet)
+- Import sessioni da SecureCRT (.ini)
+- Comando bulk su N apparati
+- Shortcut: Ctrl+N nuova, Ctrl+Q quick connect, Ctrl+T tab, Ctrl+W chiudi
 
-## Architettura
+## Per Junior e Senior
 
-```
-netzunami/
-├── netzunami/
-│   ├── cli.py            # CLI (click)
-│   ├── config.py         # Config da ~/.netzunami/config.yaml
-│   ├── connector.py      # SSH + bastion/jump host (paramiko)
-│   ├── parser.py         # Running-config parser (Cisco IOS)
-│   ├── embedder.py       # sentence-transformers wrapper
-│   ├── indexer.py        # PDF ingestion + FAISS indexing
-│   ├── analyzer.py       # Rule-based + knowledge-based analysis
-│   ├── listener.py       # Real-time session listener
-│   └── models.py         # Finding, ConfigBlock, Severity, etc.
-├── pyproject.toml
-└── IDEA.md
-```
-
-## Regole incluse (Cisco IOS)
-
-CRITICAL: default route senza tracking, enable secret assente, SSHv1
-HIGH: HTTP server attivo
-MEDIUM: MTU mismatch, STP guard, BGP peer, NTP source, AAA, SNMP community, username priv15
-LOW: port-channel, VLAN, OSPF, ACL, password encryption
-INFO: no shutdown, no ip domain-lookup, SSHv2, HTTPS, enable secret
+- **Junior**: impara dalle best practice embedded, capisce cosa controllare, non sbaglia configurazioni di base
+- **Senior**: velocizza audit, bulk change, non perde dettagli su decine di apparati
+- **Futuro**: change massivi con revisione AI (diff strutturato, rollback pianificato)
 
 ## Prossimo
 
 1. SSH hop multiplo (catena bastion)
 2. Parser multi-vendor (Huawei VRP, Juniper JunOS)
 3. Dataset sessioni → training incrementale feedback loop
-4. TUI curses per split terminale (SSH + chat laterale)
+4. Change massivi con revisione AI (diff strutturato, rollback)
+5. TUI curses per split terminale (SSH + chat laterale)
