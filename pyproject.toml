@@ -1,5 +1,5 @@
 [project]
-name = "netzunami"
+name = "NeTsunami"
 version = "0.1.0"
 description = "Network config analyzer with AI embeddings"
 requires-python = ">=3.10"
@@ -20,7 +20,7 @@ ai = [
 ]
 
 [project.scripts]
-netzunami = "netzunami.cli:cli"
+NeTsunami = "NeTsunami.cli:cli"
 
 [build-system]
 requires = ["setuptools>=68"]

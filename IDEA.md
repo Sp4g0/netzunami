@@ -1,4 +1,4 @@
-# Netzunami — Network Config Analyzer AI
+# NeTsunami — Network Config Analyzer AI
 
 **Idea di: Sp4g0 — Prototipo v0.1.0 — bozza da testare**
 
@@ -16,7 +16,7 @@ Terminale SSH intelligente (tipo PuTTY/SecureCRT) che analizza configurazioni di
 1. hosts.txt                   2. Da chat (AI)                   3. Push
 ┌──────────────┐              ┌──────────────┐                  ┌──────────┐
 │ 10.0.0.1     │              │ interface    │                  │ Apparato │
-│ 10.0.0.2     │     template │ {{port}}     │   netzunami      │    1 ✓   │
+│ 10.0.0.2     │     template │ {{port}}     │   NeTsunami      │    1 ✓   │
 │ sw-01        │  ───────►    │  switchport  │  ──────────►     │    2 ✓   │
 │ sw-02        │              │  mode access │                  │    3 ✓   │
 └──────────────┘              │  ...         │                  └──────────┘
@@ -27,22 +27,22 @@ Terminale SSH intelligente (tipo PuTTY/SecureCRT) che analizza configurazioni di
 
 ```bash
 # Backup massivo
-netzunami bulk backup hosts.txt -o ~/backup/
+NeTsunami bulk backup hosts.txt -o ~/backup/
 
 # Push template con variabili
-netzunami bulk push hosts.txt template.txt --var port=Gi0/1 --var vlan=100
+NeTsunami bulk push hosts.txt template.txt --var port=Gi0/1 --var vlan=100
 
 # Salta conferma (-y)
-netzunami bulk push hosts.txt template.txt -y
+NeTsunami bulk push hosts.txt template.txt -y
 
 # Analisi offline
-netzunami analyze show_run.cfg
+NeTsunami analyze show_run.cfg
 
 # Connessione SSH + analisi live
-netzunami ssh 10.0.0.1 -u admin
+NeTsunami ssh 10.0.0.1 -u admin
 
 # GUI
-python -m netzunami.gui
+python -m NeTsunami.gui
 ```
 
 ## GUI (Tkinter)

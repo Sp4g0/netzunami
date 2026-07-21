@@ -29,7 +29,7 @@ cfg = Config.load()
 @click.group()
 @click.version_option(version=__version__)
 def cli():
-    """Netzunami — Network config analyzer with AI embeddings"""
+    """NeTsunami — Network config analyzer with AI embeddings"""
 
 
 @cli.command()
@@ -72,7 +72,7 @@ def ssh(host, user, key, port, enable, enable_password, save):
         blocks = parse_running_config(raw)
         results = analyze_with_rules(blocks)
 
-        console.print(f"\n[bold cyan]Netzunami Report — {host}[/bold cyan]")
+        console.print(f"\n[bold cyan]NeTsunami Report — {host}[/bold cyan]")
         console.print(f"  Blocks parsed: {len(blocks)}")
         console.print(f"  Findings: {len(results)}\n")
 
@@ -105,7 +105,7 @@ def analyze(config_file, vendor):
         knowledge_results = analyze_with_knowledge(blocks, idx, meta)
         results.extend(knowledge_results)
 
-    console.print(f"\n[bold cyan]Netzunami Analysis — {config_file}[/bold cyan]")
+    console.print(f"\n[bold cyan]NeTsunami Analysis — {config_file}[/bold cyan]")
     console.print(f"  Blocks: {len(blocks)}  Findings: {len(results)}\n")
 
     if results:
@@ -171,7 +171,7 @@ def search_kb(query, top_k):
     idx, meta = _im(str(data_dir.parent / "manuals" if False else data_dir), str(data_dir), rebuild=False)
 
     if idx.ntotal == 0:
-        console.print("[yellow]Knowledge base vuoto. Usa 'netzunami index' prima.[/yellow]")
+        console.print("[yellow]Knowledge base vuoto. Usa 'NeTsunami index' prima.[/yellow]")
         return
 
     results = search(idx, meta, query, model_name=cfg.model_name, top_k=top_k)
@@ -286,12 +286,12 @@ def excel(excel_path, template_file, host_col, sheet, yes, workers):
 
 @cli.command()
 def info():
-    """Show netzunami status"""
+    """Show NeTsunami status"""
     auto_index(verbose=True)
     data_dir = Path(cfg.data_dir)
     knowledge_dir = data_dir / "knowledge"
 
-    console.print(f"[bold cyan]Netzunami {__version__}[/bold cyan]")
+    console.print(f"[bold cyan]NeTsunami {__version__}[/bold cyan]")
     console.print(f"  Data dir:      {data_dir}")
     console.print(f"  Model:         {cfg.model_name}")
     console.print(f"  Bastion:       {cfg.bastion.host or 'none'}")
@@ -307,9 +307,9 @@ def info():
             except ImportError:
                 console.print(f"  Knowledge base: presente (installa AI per leggerlo)")
         else:
-            console.print(f"  Knowledge base: vuoto (usa 'netzunami index')")
+            console.print(f"  Knowledge base: vuoto (usa 'NeTsunami index')")
     else:
-        console.print(f"  Knowledge base: vuoto (usa 'netzunami index')")
+        console.print(f"  Knowledge base: vuoto (usa 'NeTsunami index')")
 
     configs_dir = data_dir / "configs"
     if configs_dir.exists():

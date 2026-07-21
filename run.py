@@ -25,7 +25,7 @@ def pip_install(*args):
 
 def ensure_venv_and_package():
     first_run = not _venv_bin("python").exists()
-    package_installed = _venv_bin("netzunami" + (".exe" if IS_WINDOWS else "")).exists()
+    package_installed = _venv_bin("NeTsunami" + (".exe" if IS_WINDOWS else "")).exists()
 
     if first_run:
         banner("Prima configurazione in corso...")
@@ -35,7 +35,7 @@ def ensure_venv_and_package():
     if first_run or not package_installed:
         banner("Installazione dipendenze...")
         pip_install("-r", str(REQUIREMENTS))
-        banner("Installazione netzunami...")
+        banner("Installazione NeTsunami...")
         pip_install("-e", str(APP_DIR))
         if first_run:
             banner("Pronto! (usa --ai per funzioni AI)")
@@ -52,11 +52,11 @@ def main():
         banner("Fatto!")
 
     if not args:
-        subprocess.call([str(_venv_bin("netzunami")), "--help"])
+        subprocess.call([str(_venv_bin("NeTsunami")), "--help"])
     elif args[0] == "gui":
-        subprocess.call([str(_venv_bin("python")), "-m", "netzunami.gui"])
+        subprocess.call([str(_venv_bin("python")), "-m", "NeTsunami.gui"])
     else:
-        subprocess.call([str(_venv_bin("netzunami"))] + args)
+        subprocess.call([str(_venv_bin("NeTsunami"))] + args)
 
 
 if __name__ == "__main__":

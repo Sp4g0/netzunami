@@ -14,7 +14,7 @@ class BastionConfig:
 @dataclass
 class Config:
     bastion: BastionConfig = field(default_factory=BastionConfig)
-    data_dir: str = str(Path.home() / ".netzunami")
+    data_dir: str = str(Path.home() / ".netsunami")
     model_name: str = "all-MiniLM-L6-v2"
     chunk_size: int = 512
     chunk_overlap: int = 64
@@ -22,7 +22,7 @@ class Config:
     @classmethod
     def load(cls, path: str | None = None) -> "Config":
         if path is None:
-            path = str(Path.home() / ".netzunami" / "config.yaml")
+            path = str(Path.home() / ".netsunami" / "config.yaml")
         cfg = cls()
         try:
             with open(path) as f:

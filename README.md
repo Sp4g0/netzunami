@@ -1,11 +1,11 @@
-# 🌊 Netzunami
+# 🌊 NeTsunami
 
 > **Terminale SSH intelligente per network engineer.**
 > Analisi running-config in tempo reale, AI embeddings, change massivi, multi-vendor.
 
 ---
 
-## 🚀 Perché Netzunami?
+## 🚀 Perché NeTsunami?
 
 | 👶 **Junior** | 👨‍💼 **Senior** |
 |:---|:---|
@@ -19,15 +19,15 @@
 
 | Comando | Cosa fa |
 |---------|---------|
-| `netzunami ssh <host>` | 🔌 SSH + dump config + analisi immediata |
-| `netzunami analyze <file>` | 📋 Analisi offline di una running-config |
-| `netzunami bulk backup hosts.txt` | 💾 Backup massivo di N apparati |
-| `netzunami bulk push hosts.txt template.txt` | 📤 Push comandi su N apparati |
-| `netzunami bulk excel report.xlsx template.txt` | 📊 Push da Excel (colonne → variabili) |
-| `netzunami listen <log>` | 👂 Ascolta sessione live e suggerisce |
-| `netzunami index <dir>` | 📚 Indicizza manuali PDF in knowledge base |
-| `python -m netzunami.gui` | 🖥️ GUI stile SecureCRT |
-| `netzunami info` | ℹ️ Stato: vettori, modello, config |
+| `NeTsunami ssh <host>` | 🔌 SSH + dump config + analisi immediata |
+| `NeTsunami analyze <file>` | 📋 Analisi offline di una running-config |
+| `NeTsunami bulk backup hosts.txt` | 💾 Backup massivo di N apparati |
+| `NeTsunami bulk push hosts.txt template.txt` | 📤 Push comandi su N apparati |
+| `NeTsunami bulk excel report.xlsx template.txt` | 📊 Push da Excel (colonne → variabili) |
+| `NeTsunami listen <log>` | 👂 Ascolta sessione live e suggerisce |
+| `NeTsunami index <dir>` | 📚 Indicizza manuali PDF in knowledge base |
+| `python -m NeTsunami.gui` | 🖥️ GUI stile SecureCRT |
+| `NeTsunami info` | ℹ️ Stato: vettori, modello, config |
 
 ---
 
@@ -44,7 +44,7 @@ pip install -e ".[ai]"
 pip install pandas openpyxl
 
 # Avvia GUI
-python -m netzunami.gui
+python -m NeTsunami.gui
 ```
 
 ---
@@ -54,16 +54,16 @@ python -m netzunami.gui
 ```bash
 # Backup di 10 switch
 echo -e "sw-01\nsw-02\nsw-03" > hosts.txt
-netzunami bulk backup hosts.txt -o ~/backup/
+NeTsunami bulk backup hosts.txt -o ~/backup/
 
 # Push template da Excel
-netzunami bulk excel report.xlsx template.txt --host-col Hostname
+NeTsunami bulk excel report.xlsx template.txt --host-col Hostname
 
 # Analisi running-config
-netzunami analyze show_run.cfg
+NeTsunami analyze show_run.cfg
 
 # Connessione via bastion
-netzunami ssh core-sw-01 -u admin
+NeTsunami ssh core-sw-01 -u admin
 ```
 
 ---
@@ -88,7 +88,7 @@ netzunami ssh core-sw-01 -u admin
 📝 template.txt  (con {{Colonna}} dal tuo Excel)
         │
         ▼
-🌊 netzunami bulk push / excel
+🌊 NeTsunami bulk push / excel
         │
         ├── ✅ sw-01  〰️ interface Gi0/1, vlan 100
         ├── ✅ sw-02  〰️ interface Gi0/2, vlan 200

@@ -9,7 +9,7 @@ import hashlib
 class Vault:
     def __init__(self, vault_path: str | None = None):
         if vault_path is None:
-            vault_path = str(Path.home() / ".netzunami" / "vault.enc")
+            vault_path = str(Path.home() / ".netsunami" / "vault.enc")
         self.path = vault_path
         self._key = None
         self._data: dict = {}

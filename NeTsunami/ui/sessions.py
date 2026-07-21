@@ -2,8 +2,8 @@ import json
 import os
 from pathlib import Path
 
-SESSION_FILE = str(Path.home() / ".netzunami" / "sessions.json")
-LAST_SESSION_FILE = str(Path.home() / ".netzunami" / "last_session.json")
+SESSION_FILE = str(Path.home() / ".netsunami" / "sessions.json")
+LAST_SESSION_FILE = str(Path.home() / ".netsunami" / "last_session.json")
 
 
 def load_sessions() -> list[dict]:

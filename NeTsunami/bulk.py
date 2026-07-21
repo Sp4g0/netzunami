@@ -29,7 +29,7 @@ def read_hosts(hosts_file: str) -> list[dict]:
 
 def backup(hosts: list[dict], output_dir: str | None = None, max_workers: int = 5):
     if output_dir is None:
-        output_dir = str(Path.home() / ".netzunami" / "backups")
+        output_dir = str(Path.home() / ".netsunami" / "backups")
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 

@@ -15,10 +15,10 @@ DEFAULT_FONT = ("Segoe UI", 10)
 MONO_FONT = ("Consolas", 11)
 
 
-class NetzunamiApp:
+class NeTsunamiApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Netzunami — Network Terminal")
+        self.root.title("NeTsunami — Network Terminal")
         self.root.geometry("1280x800")
         self.root.minsize(900, 600)
 
@@ -167,7 +167,7 @@ class NetzunamiApp:
         welcome = tk.Frame(self.tabs, bg="#0a0a0a")
         tk.Label(
             welcome,
-            text="Netzunami v0.1\n\nCtrl+N: Nuova connessione\nCtrl+Q: Quick Connect\n\nSeleziona una sessione a sinistra\nper connetterti a un apparato.",
+            text="NeTsunami v0.1\n\nCtrl+N: Nuova connessione\nCtrl+Q: Quick Connect\n\nSeleziona una sessione a sinistra\nper connetterti a un apparato.",
             bg="#0a0a0a",
             fg="#888888",
             font=("Segoe UI", 12),
@@ -251,10 +251,10 @@ class NetzunamiApp:
         self.bar_vault.config(text="Vault: ✓" if vault_ok else "Vault: chiuso")
 
     def _unlock_vault(self):
-        vault_path = Path.home() / ".netzunami" / "vault.enc"
+        vault_path = Path.home() / ".netsunami" / "vault.enc"
         if vault_path.exists():
             pw = simpledialog.askstring(
-                "Vault Netzunami",
+                "Vault NeTsunami",
                 "Inserisci master password del vault:",
                 show="*",
                 parent=self.root,
@@ -588,7 +588,7 @@ class NetzunamiApp:
 
         output_dir = fd.askdirectory(title="Cartella per backup", parent=self.root)
         if not output_dir:
-            output_dir = str(Path.home() / ".netzunami" / "backups")
+            output_dir = str(Path.home() / ".netsunami" / "backups")
 
         hosts = read_hosts(hosts_file)
         if not hosts:
@@ -710,13 +710,13 @@ class NetzunamiApp:
         ))
 
     def _preferences(self):
-        messagebox.showinfo("Preferenze", "Configurabile in ~/.netzunami/config.yaml")
+        messagebox.showinfo("Preferenze", "Configurabile in ~/.netsunami/config.yaml")
 
     def _show_about(self):
         from .. import __version__
         messagebox.showinfo(
-            "Netzunami",
-            f"Netzunami v{__version__}\n\nNetwork config analyzer with AI\nPython + Tkinter + Paramiko",
+            "NeTsunami",
+            f"NeTsunami v{__version__}\n\nNetwork config analyzer with AI\nPython + Tkinter + Paramiko",
         )
 
     def _show_shortcuts(self):
