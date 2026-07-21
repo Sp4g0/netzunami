@@ -38,8 +38,9 @@ def cli():
 @click.option("-k", "--key", default=None, help="SSH key path")
 @click.option("-p", "--port", default=22, help="SSH port")
 @click.option("--enable/--no-enable", default=True, help="Send enable")
+@click.option("--enable-password", default=None, help="Enable password")
 @click.option("--save", is_flag=True, help="Save config to file")
-def ssh(host, user, key, port, enable, save):
+def ssh(host, user, key, port, enable, enable_password, save):
     """Connect to device via SSH and grab running-config"""
     bastion = None
     if cfg.bastion.host:
@@ -55,7 +56,7 @@ def ssh(host, user, key, port, enable, save):
         console.print(f"[green]✓[/green] Connected to {host}")
 
         commands = ["show running-config"]
-        raw = run_commands(client, commands, enable=enable)
+        raw = run_commands(client, commands, enable=enable, enable_password=enable_password)
         client.close()
 
         if save:

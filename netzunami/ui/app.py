@@ -8,7 +8,7 @@ from pathlib import Path
 from .terminal import TerminalWidget
 from .findings import FindingsPanel
 from .vault import Vault
-from .sessions import load_sessions, save_sessions, add_session, remove_session
+from .sessions import load_sessions, save_sessions, add_session, remove_session, save_last_session, load_last_session
 
 
 DEFAULT_FONT = ("Segoe UI", 10)
@@ -220,27 +220,27 @@ class NetzunamiApp:
         dialog.transient(self.root)
         dialog.grab_set()
 
+        last = load_last_session()
         fields = {}
         row = 0
 
-        for label, key in [
-            ("Nome sessione:", "name"),
-            ("Host/IP:", "host"),
-            ("Username:", "user"),
-            ("Porta:", "port"),
-            ("Password / Key path:", "password"),
-            ("Vendor:", "vendor"),
+        for label, key, default in [
+            ("Nome sessione:", "name", ""),
+            ("Host/IP:", "host", ""),
+            ("Username:", "user", last.get("user", "admin")),
+            ("Porta:", "port", str(last.get("port", 22))),
+            ("Password:", "password", ""),
+            ("Enable password:", "enable_pw", ""),
         ]:
             tk.Label(dialog, text=label, bg="#1a1a1a", fg="#d3d7cf", anchor="w").grid(
                 row=row, column=0, sticky="w", padx=10, pady=4
             )
+            show_char = "*" if key in ("password", "enable_pw") else None
             entry = tk.Entry(dialog, bg="#333333", fg="white", insertbackground="white",
-                            relief=tk.FLAT, width=35)
+                            relief=tk.FLAT, width=35, show=show_char or "")
             entry.grid(row=row, column=1, padx=10, pady=4)
-            if key == "port":
-                entry.insert(0, "22")
-            if key == "vendor":
-                entry.insert(0, "cisco")
+            if default:
+                entry.insert(0, default)
             fields[key] = entry
             row += 1
 
@@ -249,12 +249,15 @@ class NetzunamiApp:
             if not vals["host"]:
                 return
             add_session(vals["name"] or vals["host"], vals["host"],
-                       vals["user"] or "admin", int(vals["port"] or 22), vals["vendor"])
+                       vals["user"] or "admin", int(vals["port"] or 22))
             if vals["password"]:
                 self.vault.set(vals["host"], vals["user"] or "admin", vals["password"])
+            if vals["enable_pw"]:
+                self.vault.set(vals["host"], "enable", vals["enable_pw"])
+            save_last_session(vals["user"] or "admin", int(vals["port"] or 22))
             dialog.destroy()
-            self._open_terminal(vals["host"], vals["user"] or "admin",
-                              vals["password"], vals["vendor"])
+            self._open_terminal(vals["host"], vals["user"] or "admin", vals["password"],
+                              enable_pw=vals["enable_pw"])
 
         btn = tk.Button(dialog, text="Connetti", bg="#2d5a27", fg="white",
                        relief=tk.FLAT, padx=20, pady=6, command=do_connect)
@@ -266,7 +269,8 @@ class NetzunamiApp:
             user = simpledialog.askstring("Quick Connect", "Username:", parent=self.root, initialvalue="admin")
             user = user or "admin"
             pw = self.vault.get(host, user) or ""
-            self._open_terminal(host, user, pw)
+            enable_pw = self.vault.get(host, "enable") or ""
+            self._open_terminal(host, user, pw, enable_pw=enable_pw)
 
     def _connect_selected(self):
         sel = self.session_list.curselection()
@@ -278,9 +282,10 @@ class NetzunamiApp:
             return
         s = sessions[idx]
         pw = self.vault.get(s["host"], s["user"]) or ""
-        self._open_terminal(s["host"], s["user"], pw, s.get("vendor", "cisco"))
+        enable_pw = self.vault.get(s["host"], "enable") or ""
+        self._open_terminal(s["host"], s["user"], pw, enable_pw=enable_pw)
 
-    def _open_terminal(self, host: str, user: str, password: str = "", vendor: str = "cisco"):
+    def _open_terminal(self, host: str, user: str, password: str = "", enable_pw: str = ""):
         tab = tk.Frame(self.tabs, bg="#0a0a0a")
         terminal = TerminalWidget(tab, vault=self.vault, on_finding=self._on_finding)
         terminal.pack(fill=tk.BOTH, expand=True)
@@ -289,21 +294,27 @@ class NetzunamiApp:
             self.tabs.add(tab, text=f"  {host}  ")
             self.tabs.select(tab)
             self.current_terminal = terminal
-            terminal.connect(host, user, password)
+            terminal.connect(host, user, password, enable_pw=enable_pw)
             self._update_status(f"Connesso a {host}")
         else:
             pw_dialog = tk.Toplevel(self.root)
             pw_dialog.title(f"Password per {user}@{host}")
-            pw_dialog.geometry("350x180")
+            pw_dialog.geometry("350x240")
             pw_dialog.configure(bg="#1a1a1a")
             pw_dialog.transient(self.root)
             pw_dialog.grab_set()
 
-            tk.Label(pw_dialog, text=f"Password per {user}@{host}:",
-                    bg="#1a1a1a", fg="#d3d7cf").pack(pady=10)
+            tk.Label(pw_dialog, text=f"Password SSH per {user}@{host}:",
+                    bg="#1a1a1a", fg="#d3d7cf").pack(pady=8)
             pw_entry = tk.Entry(pw_dialog, show="*", bg="#333333", fg="white",
                                insertbackground="white", relief=tk.FLAT, width=30)
-            pw_entry.pack(pady=5)
+            pw_entry.pack(pady=3)
+
+            tk.Label(pw_dialog, text="Enable password (opzionale):",
+                    bg="#1a1a1a", fg="#d3d7cf").pack(pady=8)
+            en_entry = tk.Entry(pw_dialog, show="*", bg="#333333", fg="white",
+                               insertbackground="white", relief=tk.FLAT, width=30)
+            en_entry.pack(pady=3)
             save_var = tk.BooleanVar()
             tk.Checkbutton(
                 pw_dialog, text="Salva nel vault", variable=save_var,
@@ -313,13 +324,17 @@ class NetzunamiApp:
 
             def do_connect():
                 pw = pw_entry.get()
-                if save_var.get() and pw:
-                    self.vault.set(host, user, pw)
+                en = en_entry.get()
+                if save_var.get():
+                    if pw:
+                        self.vault.set(host, user, pw)
+                    if en:
+                        self.vault.set(host, "enable", en)
                 pw_dialog.destroy()
                 self.tabs.add(tab, text=f"  {host}  ")
                 self.tabs.select(tab)
                 self.current_terminal = terminal
-                terminal.connect(host, user, pw)
+                terminal.connect(host, user, pw, enable_pw=en)
                 self._update_status(f"Connesso a {host}")
 
             tk.Button(pw_dialog, text="Connetti", bg="#2d5a27", fg="white",

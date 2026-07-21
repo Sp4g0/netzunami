@@ -101,15 +101,29 @@ def detect_vendor(shell) -> str:
     return "cisco"
 
 
+def _enable_and_wait(shell, prompt_re: str, enable_password: str | None = None):
+    shell.send("enable\n")
+    output = _recv_until_prompt(shell, prompt_re)
+    if "password" in output.lower() and enable_password:
+        shell.send(f"{enable_password}\n")
+        output += _recv_until_prompt(shell, prompt_re)
+    return output
+
+
 def run_commands(
     client: paramiko.SSHClient,
     commands: list[str],
-    vendor: str = "cisco",
+    vendor: str | None = None,
     enable: bool = True,
+    enable_password: str | None = None,
 ) -> str:
     shell = client.invoke_shell()
     shell.settimeout(30)
     output = ""
+
+    if vendor is None:
+        vendor = detect_vendor(shell)
+
     prompt_re = VENDOR_PROMPTS.get(vendor, r"[>#]\s*$")
 
     if vendor == "huawei":
@@ -124,8 +138,7 @@ def run_commands(
 
     if vendor == "aethra":
         if enable:
-            shell.send("enable\n")
-            _recv_until_prompt(shell, prompt_re)
+            output += _enable_and_wait(shell, prompt_re, enable_password)
         shell.send("terminal length 0\n")
         _recv_until_prompt(shell, prompt_re)
         for cmd in commands:
@@ -145,11 +158,8 @@ def run_commands(
 
     if vendor == "cisco":
         if enable:
-            shell.send("enable\n")
-            _recv_until_prompt(shell, prompt_re)
-            shell.send("terminal length 0\n")
-        else:
-            shell.send("terminal length 0\n")
+            output += _enable_and_wait(shell, prompt_re, enable_password)
+        shell.send("terminal length 0\n")
         _recv_until_prompt(shell, prompt_re)
         for cmd in commands:
             shell.send(f"{cmd}\n")

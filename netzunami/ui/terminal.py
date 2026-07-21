@@ -5,7 +5,7 @@ import re
 import tkinter as tk
 from tkinter import font as tkfont
 
-from ..connector import ssh_connect, run_commands
+from ..connector import ssh_connect, run_commands, detect_vendor
 from ..analyzer import COMMON_ISSUES
 
 
@@ -41,6 +41,7 @@ class TerminalWidget(tk.Frame):
         self.vault = vault
         self.on_finding = on_finding
         self.rules = COMMON_ISSUES.get("cisco", [])
+        self.vendor = "cisco"
 
         self.input_queue = queue.Queue()
         self.output_queue = queue.Queue()
@@ -103,11 +104,13 @@ class TerminalWidget(tk.Frame):
             self.text.insert(tk.END, part, ("ansi",))
             self.text.tag_config("ansi", foreground=color)
 
-    def connect(self, host: str, user: str, password: str = "", key_path: str = ""):
+    def connect(self, host: str, user: str, password: str = "",
+                key_path: str = "", enable_pw: str = ""):
         self.host = host
         self.user = user
         self.password = password
         self.key_path = key_path
+        self.enable_pw = enable_pw
 
         self._write(f"Connecting to {host}...\n", "info")
         threading.Thread(target=self._ssh_thread, daemon=True).start()
@@ -125,6 +128,15 @@ class TerminalWidget(tk.Frame):
             self.connected = True
             self.after(0, lambda: self._write(f"Connected to {self.host}\n", "prompt"))
 
+            self.vendor = detect_vendor(self.channel)
+            self.rules = COMMON_ISSUES.get(self.vendor, COMMON_ISSUES.get("cisco", []))
+            self.after(0, lambda: self._write(f"Vendor: {self.vendor}\n", "info"))
+
+            if self.enable_pw:
+                self.channel.send("enable\n")
+                time.sleep(0.3)
+                self.channel.send(f"{self.enable_pw}\n")
+                time.sleep(0.5)
             self.channel.send("terminal length 0\n")
             time.sleep(0.5)
 
