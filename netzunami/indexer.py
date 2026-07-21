@@ -2,7 +2,6 @@ import os
 import re
 import json
 import numpy as np
-import faiss
 from pathlib import Path
 from .embedder import embed
 
@@ -41,7 +40,8 @@ def index_manuals(
     chunk_size: int = 512,
     chunk_overlap: int = 64,
     rebuild: bool = False,
-) -> tuple[faiss.Index, list[dict]]:
+) -> tuple[any, list[dict]]:
+    import faiss
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -98,7 +98,7 @@ def index_manuals(
 
 
 def search(
-    index: faiss.Index,
+    index: any,
     metadata: list[dict],
     query: str,
     model_name: str = "all-MiniLM-L6-v2",

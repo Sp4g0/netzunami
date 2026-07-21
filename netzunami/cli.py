@@ -299,9 +299,12 @@ def info():
         idx_path = knowledge_dir / "faiss.index"
         meta_path = knowledge_dir / "metadata.json"
         if idx_path.exists():
-            import faiss
-            idx = faiss.read_index(str(idx_path))
-            console.print(f"  Knowledge base: {idx.ntotal} vettori")
+            try:
+                import faiss
+                idx = faiss.read_index(str(idx_path))
+                console.print(f"  Knowledge base: {idx.ntotal} vettori")
+            except ImportError:
+                console.print(f"  Knowledge base: presente (installa AI per leggerlo)")
         else:
             console.print(f"  Knowledge base: vuoto (usa 'netzunami index')")
     else:
